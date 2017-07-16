@@ -13,6 +13,8 @@ cities = [{"id": 4699066, "name": "Houston"},
 app = Flask(__name__)
 stop_event = Event() # event handle to stop the scheduler
 config = {"delay":60} # default server config
+API_KEY = "a40f16f6c2b566534b10c2bb5553994b"
+client = pymongo.MongoClient() # (host="mongo")
 
 class Scheduler(Thread):
     def __init__(self, event, script, delay=2):
@@ -27,6 +29,26 @@ class Scheduler(Thread):
             self._event.wait(self._delay)
 
 
+def get_db():
+    coll = client.weatherdb.weather
+    return coll
+
+
+def get_weather():
+    for city in cities:
+        r = requests.get(
+            'http://api.openweathermap.org/data/2.5/weather?id=' + str(city["id"]) + "&APPID=" + API_KEY)
+        print(r.json())
+        entry = r.json()
+        entry["source"] = "OpenWeatherMap"
+        entry["updated_on"] = datetime.datetime.utcnow()
+        coll = get_db()
+        coll.insert_one(entry)
+
+
+# def print_time():
+#     print(datetime.datetime.now())
+
 # change configuration of the server
 @app.route('/config', methods=['PUT'])
 def set_config():
@@ -38,7 +60,7 @@ def set_config():
             global stop_event
             stop_event.set()
             stop_event = Event()
-            new_schedule = Scheduler(stop_event, print_time, config["delay"])
+            new_schedule = Scheduler(stop_event, get_weather, config["delay"])
             new_schedule.start()
     return jsonify(config)
 
@@ -47,21 +69,14 @@ def set_config():
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
+
 @app.errorhandler(400)
 def not_found(error):
     return make_response(jsonify({'error': 'Bad request'}), 400)
 
 
-# def get_weather():
-#     r = requests.get('http://api.openweathermap.org/data/2.5/weather?id=4699066&APPID=a40f16f6c2b566534b10c2bb5553994b')
-#     print(r.json())
-
-
-def print_time():
-    print(datetime.datetime.now())
-
 if __name__ == "__main__":
-    schedule = Scheduler(stop_event, print_time, config["delay"])
+    schedule = Scheduler(stop_event, get_weather, config["delay"])
     schedule.start()
     app.run(port=5000)
 
