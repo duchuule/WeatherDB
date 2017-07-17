@@ -33,17 +33,25 @@ def datetime_convert(time):
 # api to get weatehr data
 @app.route('/', methods=['GET'])
 def get_data():
-    if not request.json or 'id' not in request.json:
-        return JSONEncoder().encode({"error": "no cityid specified"})
-
     db = get_db()
+    if not request.json :
+        return JSONEncoder().encode({"error": "invalid json data"})
+
+    # this command do not require cityid
+    if 'count' in request.json:
+        return JSONEncoder().encode({"count": db.count()})
+
+    # the remaining commands require city id, so check for id field
+    if 'id' not in request.json:
+        return JSONEncoder().encode({"error": "invalid json data"})
+
     cityid = request.json["id"]
 
-    #when 'time' is requested, return one data point closest to that time
+    # when 'time' is requested, return one data point closest to that time
     if 'time' in request.json:
         time = math.floor(datetime_convert(request.json['time']).timestamp())
 
-        #try to find the time closest before an closest after, then comparing them
+        # try to find the a time closest before and a time closest after, then comparing them
         closest_before = db.find({"updated_on": {"$lte": time}, "id":cityid}).sort("updated_on", pymongo.DESCENDING)
         closest_after = db.find({"updated_on": {"$gte": time}, "id":cityid}).sort("updated_on", pymongo.ASCENDING)
         if closest_before.count() == 0: #no time before in database
