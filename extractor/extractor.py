@@ -36,21 +36,23 @@ def get_db():
 
 
 def get_weather():
-    new_entries = []
-    for city in cities:
-        r = requests.get(
-            'http://api.openweathermap.org/data/2.5/weather?id=' + str(city["id"]) + "&APPID=" + API_KEY)
-        entry = r.json()
-        entry["source"] = "OpenWeatherMap"
-        dt = datetime.datetime.now(datetime.timezone.utc)  # do *not* use utcnow()!
-        entry["updated_on"] = math.floor(dt.timestamp())
-        new_entries.append(entry)
-        # print(entry)
+    try:
+        new_entries = []
+        for city in cities:
+            r = requests.get(
+                'http://api.openweathermap.org/data/2.5/weather?id=' + str(city["id"]) + "&APPID=" + API_KEY)
+            entry = r.json()
+            entry["source"] = "OpenWeatherMap"
+            dt = datetime.datetime.now(datetime.timezone.utc)  # do *not* use utcnow()!
+            entry["updated_on"] = math.floor(dt.timestamp())
+            new_entries.append(entry)
+            # print(entry)
 
-    # add entries in batch
-    coll = get_db()
-    coll.insert_many(new_entries)
-
+        # add entries in batch
+        coll = get_db()
+        coll.insert_many(new_entries)
+    except Exception as e:
+        print("Exception: ", e)
 
 # def print_time():
 #     print(datetime.datetime.now())

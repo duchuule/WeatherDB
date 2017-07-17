@@ -9,5 +9,7 @@ curl -i -H "Content-Type: application/json" -X "GET" -d "{\"id\":4699066,\"time\
 
 curl -i -H "Content-Type: application/json" -X "GET" -d "{\"id\":4699066,\"time\":\"2017-07-17T04:07:25\"}" "http://localhost"
 
-where: - id is cityid according to OpenWeatherMap (integer type)
-       - time can be unix timestamp (integer type) or ISO 8601 string in UTC timezone
+curl -i -H "Content-Type: application/json" -X "GET" -d "{\"id\":4699066,\"begintime\":1500318000,\"endtime\":1500319800}" "http://localhost"
+
+where: - "id" is cityid according to OpenWeatherMap (integer type)
+       - "time", "begintime", "endtime" can be unix timestamp (integer type) or ISO 8601 string in UTC timezone
