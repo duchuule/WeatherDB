@@ -41,7 +41,7 @@ def get_weather():
             'http://api.openweathermap.org/data/2.5/weather?id=' + str(city["id"]) + "&APPID=" + API_KEY)
         entry = r.json()
         entry["source"] = "OpenWeatherMap"
-        dt = datetime.datetime.now(datetime.timezone.utc) # do *not* use utcnow()!
+        dt = datetime.datetime.now(datetime.timezone.utc)  # do *not* use utcnow()!
         entry["updated_on"] = math.floor(dt.timestamp())
         coll = get_db()
         coll.insert_one(entry)
