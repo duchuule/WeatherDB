@@ -3,6 +3,7 @@ import pymongo
 from threading import Thread, Event
 import datetime
 import requests
+import math
 
 cities = [{"id": 4699066, "name": "Houston"},
           {"id": 5128581, "name": "New York"},
@@ -38,13 +39,13 @@ def get_weather():
     for city in cities:
         r = requests.get(
             'http://api.openweathermap.org/data/2.5/weather?id=' + str(city["id"]) + "&APPID=" + API_KEY)
-        print(r.json())
         entry = r.json()
         entry["source"] = "OpenWeatherMap"
-        entry["updated_on"] = datetime.datetime.utcnow()
+        dt = datetime.datetime.now(datetime.timezone.utc) # do *not* use utcnow()!
+        entry["updated_on"] = math.floor(dt.timestamp())
         coll = get_db()
         coll.insert_one(entry)
-
+        # print(entry)
 
 # def print_time():
 #     print(datetime.datetime.now())
@@ -67,12 +68,12 @@ def set_config():
 
 @app.errorhandler(404)
 def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}), 404)
+    return make_response(jsonify({'error': 'not found'}), 404)
 
 
 @app.errorhandler(400)
 def not_found(error):
-    return make_response(jsonify({'error': 'Bad request'}), 400)
+    return make_response(jsonify({'error': 'bad request'}), 400)
 
 
 if __name__ == "__main__":
