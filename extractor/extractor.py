@@ -50,6 +50,7 @@ def get_weather():
 # def print_time():
 #     print(datetime.datetime.now())
 
+
 # change configuration of the server
 @app.route('/config', methods=['PUT'])
 def set_config():
@@ -62,6 +63,7 @@ def set_config():
             stop_event.set()
             stop_event = Event()
             new_schedule = Scheduler(stop_event, get_weather, config["delay"])
+            new_schedule.daemon = True
             new_schedule.start()
     return jsonify(config)
 
@@ -78,6 +80,7 @@ def not_found(error):
 
 if __name__ == "__main__":
     schedule = Scheduler(stop_event, get_weather, config["delay"])
+    schedule.daemon = True
     schedule.start()
     app.run(port=5000)
 
