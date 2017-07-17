@@ -15,7 +15,7 @@ app = Flask(__name__)
 stop_event = Event() # event handle to stop the scheduler
 config = {"delay":60} # default server config
 API_KEY = "a40f16f6c2b566534b10c2bb5553994b"
-client = pymongo.MongoClient() # (host="mongo")
+client = pymongo.MongoClient(host="mongo")
 
 class Scheduler(Thread):
     def __init__(self, event, script, delay=2):
@@ -82,6 +82,6 @@ if __name__ == "__main__":
     schedule = Scheduler(stop_event, get_weather, config["delay"])
     schedule.daemon = True
     schedule.start()
-    app.run(port=5000)
+    app.run(host='0.0.0.0', port=5000)
 
 

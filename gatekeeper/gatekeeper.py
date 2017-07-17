@@ -8,7 +8,7 @@ import bson
 
 
 app = Flask(__name__)
-client = pymongo.MongoClient() # (host="mongo")
+client = pymongo.MongoClient(host="mongo")
 
 
 # helper function for json encode because jsonify sucks
@@ -71,4 +71,4 @@ def not_found(error):
 
 
 if __name__ == "__main__":
-    app.run(port=80)
+    app.run(host='0.0.0.0', port=80)
