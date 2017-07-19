@@ -1,4 +1,4 @@
-from flask import Flask,  make_response, request
+from flask import Flask, make_response, request
 import pymongo
 import datetime
 from dateutil import parser
@@ -35,8 +35,12 @@ def datetime_convert(time):
 @app.route('/', methods=['GET'])
 def get_data():
     db = get_db()
-    if not request.json:
-        return JSONEncoder().encode({"error": "invalid json data"})
+    try:
+        if not request.json:
+            return JSONEncoder().encode({"error": "invalid json data"})
+    except Exception as e:
+        # note: this will happen if json data do not escape the quotes around "count", "time", etc
+        return JSONEncoder().encode({"error": "invalid json data", "exception": str(e)})
 
     # these commands do not require cityid
     if 'count' in request.json:

@@ -9,3 +9,6 @@ WORKDIR /extractor
 
 # Install any needed packages specified in requirements.txt
 RUN pip install -r requirements.txt
+
+#entry command
+CMD ["python", "-u", "extractor.py"]

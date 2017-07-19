@@ -2,7 +2,6 @@ version: "3"
 services:
   gatekeeper:
     build: ./gatekeeper
-    command: python -u gatekeeper.py
     ports:
       - "80:80"
     # mount the code folder to flaskr2 folder inside container so that
@@ -11,7 +10,6 @@ services:
       - ./gatekeeper:/gatekeeper
   extractor:
     build: ./extractor
-    command: python -u extractor.py
     ports:
       - "5000:5000"
     volumes:

@@ -59,6 +59,15 @@ def get_weather():
 # def print_time():
 #     print(datetime.datetime.now())
 
+# query current config
+@app.route('/', methods=['GET'])
+def get_config():
+    return jsonify(config)
+
+#query number of record in database
+@app.route('/db', methods=['GET'])
+def get_db_info():
+    return jsonify({'count': get_db().count()})
 
 # change configuration of the server
 @app.route('/config', methods=['PUT'])

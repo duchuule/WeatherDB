@@ -9,3 +9,6 @@ WORKDIR /gatekeeper
 
 # Install any needed packages specified in requirements.txt
 RUN pip install -r requirements.txt
+
+#entry command
+CMD ["python", "-u", "gatekeeper.py"]
