@@ -1,11 +1,10 @@
-from flask import Flask, abort, make_response, request, url_for
+from flask import Flask,  make_response, request
 import pymongo
 import datetime
 from dateutil import parser
 import math
 import json
 import bson
-
 
 app = Flask(__name__)
 client = pymongo.MongoClient(host="mongo")
@@ -18,13 +17,15 @@ class JSONEncoder(json.JSONEncoder):
             return str(o)
         return json.JSONEncoder.default(self, o)
 
+
 def get_db():
     coll = client.weatherdb.weather
     return coll
 
+
 def datetime_convert(time):
-    #first check to see if it's epoch time
-    if isinstance(time, int ):
+    # first check to see if it's epoch time
+    if isinstance(time, int):
         return datetime.datetime.fromtimestamp(time, datetime.timezone.utc)
     else:
         return parser.parse(time).replace(tzinfo=datetime.timezone.utc)
@@ -34,16 +35,16 @@ def datetime_convert(time):
 @app.route('/', methods=['GET'])
 def get_data():
     db = get_db()
-    if not request.json :
+    if not request.json:
         return JSONEncoder().encode({"error": "invalid json data"})
 
     # these commands do not require cityid
     if 'count' in request.json:
-        if request.json['count'] == 'all': # requesting sum total number of entries in database
+        if request.json['count'] == 'all':  # requesting sum total number of entries in database
             return JSONEncoder().encode({"count": db.count()})
-        else: # requesting only number of entries for 1 city
+        else:  # requesting only number of entries for 1 city
             cityid = request.json['count']
-            return JSONEncoder().encode(db.find({"id":cityid}).count())
+            return JSONEncoder().encode(db.find({"id": cityid}).count())
 
     # the remaining commands require city id, so check for id field
     if 'id' not in request.json:
@@ -56,11 +57,11 @@ def get_data():
         time = math.floor(datetime_convert(request.json['time']).timestamp())
 
         # try to find the a time closest before and a time closest after, then comparing them
-        closest_before = db.find({"updated_on": {"$lte": time}, "id":cityid}).sort("updated_on", pymongo.DESCENDING)
-        closest_after = db.find({"updated_on": {"$gte": time}, "id":cityid}).sort("updated_on", pymongo.ASCENDING)
-        if closest_before.count() == 0: #no time before in database
+        closest_before = db.find({"updated_on": {"$lte": time}, "id": cityid}).sort("updated_on", pymongo.DESCENDING)
+        closest_after = db.find({"updated_on": {"$gte": time}, "id": cityid}).sort("updated_on", pymongo.ASCENDING)
+        if closest_before.count() == 0:  # no time before in database
             return JSONEncoder().encode(closest_after[0])
-        elif closest_after.count() == 0: #no time after in database
+        elif closest_after.count() == 0:  # no time after in database
             return JSONEncoder().encode(closest_before[0])
         else:
             if closest_after[0]["updated_on"] - time < time - closest_after[0]["updated_on"]:
@@ -69,26 +70,25 @@ def get_data():
                 return JSONEncoder().encode(closest_before[0])
     # when users request data for an a time interval
     elif 'begintime' in request.json and 'endtime' in request.json:
-            begintime = math.floor(datetime_convert(request.json['begintime']).timestamp())
-            endtime = math.floor(datetime_convert(request.json['endtime']).timestamp())
-            entries = db.find({"updated_on": {"$gte": begintime, "$lte":endtime}, "id": cityid})\
-                .sort("updated_on", pymongo.ASCENDING)
-            entries_list = []
-            for entry in entries:
-                entries_list.append(entry)
-            return JSONEncoder().encode(entries_list)
+        begintime = math.floor(datetime_convert(request.json['begintime']).timestamp())
+        endtime = math.floor(datetime_convert(request.json['endtime']).timestamp())
+        entries = db.find({"updated_on": {"$gte": begintime, "$lte": endtime}, "id": cityid}) \
+            .sort("updated_on", pymongo.ASCENDING)
+        entries_list = []
+        for entry in entries:
+            entries_list.append(entry)
+        return JSONEncoder().encode(entries_list)
     else:
         return JSONEncoder().encode({"error": "no time specified"})
 
 
-
 @app.errorhandler(404)
-def not_found(error):
+def not_found():
     return make_response(JSONEncoder().encode({'error': 'not found'}), 404)
 
 
 @app.errorhandler(400)
-def not_found(error):
+def bad_request():
     return make_response(JSONEncoder().encode({'error': 'bad request'}), 400)
 
 

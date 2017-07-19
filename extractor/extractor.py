@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, abort, make_response, request, url_for
+from flask import Flask, jsonify, abort, make_response, request
 import pymongo
 from threading import Thread, Event
 import datetime
@@ -10,12 +10,13 @@ cities = [{"id": 4699066, "name": "Houston"},
           {"id": 5368361, "name": "Los Angeles"},
           {"id": 4887398, "name": "Chicago"},
           {"id": 5308655, "name": "Phoenix"}
-          ] # list of cities to collect weather data
+          ]  # list of cities to collect weather data
 app = Flask(__name__)
-stop_event = Event() # event handle to stop the scheduler
-config = {"delay":60} # default server config
+stop_event = Event()  # event handle to stop the scheduler
+config = {"delay": 60}  # default server config
 API_KEY = "a40f16f6c2b566534b10c2bb5553994b"
 client = pymongo.MongoClient(host="mongo")
+
 
 class Scheduler(Thread):
     def __init__(self, event, script, delay=2):
@@ -54,6 +55,7 @@ def get_weather():
     except Exception as e:
         print("Exception: ", e)
 
+
 # def print_time():
 #     print(datetime.datetime.now())
 
@@ -76,12 +78,12 @@ def set_config():
 
 
 @app.errorhandler(404)
-def not_found(error):
+def not_found():
     return make_response(jsonify({'error': 'not found'}), 404)
 
 
 @app.errorhandler(400)
-def not_found(error):
+def bad_request():
     return make_response(jsonify({'error': 'bad request'}), 400)
 
 
@@ -90,5 +92,3 @@ if __name__ == "__main__":
     schedule.daemon = True
     schedule.start()
     app.run(host='0.0.0.0', port=5000)
-
-
