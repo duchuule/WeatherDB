@@ -1,9 +1,6 @@
 from flask import Flask, jsonify, abort, make_response, request
-import pymongo
-from threading import Thread, Event
-import datetime
-import requests
-import math
+from threading import Event
+from extract import Extractor, Scheduler
 
 cities = [{"id": 4699066, "name": "Houston"},
           {"id": 5128581, "name": "New York"},
@@ -15,59 +12,21 @@ app = Flask(__name__)
 stop_event = Event()  # event handle to stop the scheduler
 config = {"delay": 60}  # default server config
 API_KEY = "a40f16f6c2b566534b10c2bb5553994b"
-client = pymongo.MongoClient(host="mongo")
+database_host = "mongo"
+extractor = Extractor(cities, database_host, API_KEY)
 
-
-class Scheduler(Thread):
-    def __init__(self, event, script, delay=2):
-        Thread.__init__(self)
-        self._event = event
-        self._script = script
-        self._delay = delay
-
-    def run(self):
-        while not self._event.is_set():
-            self._script()
-            self._event.wait(self._delay)
-
-
-def get_db():
-    coll = client.weatherdb.weather
-    return coll
-
-
-def get_weather():
-    try:
-        new_entries = []
-        for city in cities:
-            r = requests.get(
-                'http://api.openweathermap.org/data/2.5/weather?id=' + str(city["id"]) + "&APPID=" + API_KEY)
-            entry = r.json()
-            entry["source"] = "OpenWeatherMap"
-            dt = datetime.datetime.now(datetime.timezone.utc)  # do *not* use utcnow()!
-            entry["updated_on"] = math.floor(dt.timestamp())
-            new_entries.append(entry)
-            # print(entry)
-
-        # add entries in batch
-        coll = get_db()
-        coll.insert_many(new_entries)
-    except Exception as e:
-        print("Exception: ", e)
-
-
-# def print_time():
-#     print(datetime.datetime.now())
 
 # query current config
 @app.route('/', methods=['GET'])
 def get_config():
     return jsonify(config)
 
-#query number of record in database
+
+# query number of record in database
 @app.route('/db', methods=['GET'])
 def get_db_info():
-    return jsonify({'count': get_db().count()})
+    return jsonify({'count': extractor.get_db().count()})
+
 
 # change configuration of the server
 @app.route('/config', methods=['PUT'])
@@ -80,7 +39,7 @@ def set_config():
             global stop_event
             stop_event.set()
             stop_event = Event()
-            new_schedule = Scheduler(stop_event, get_weather, config["delay"])
+            new_schedule = Scheduler(stop_event, extractor.get_weather, config["delay"])
             new_schedule.daemon = True
             new_schedule.start()
     return jsonify(config)
@@ -97,7 +56,7 @@ def bad_request():
 
 
 if __name__ == "__main__":
-    schedule = Scheduler(stop_event, get_weather, config["delay"])
+    schedule = Scheduler(stop_event, extractor.get_weather, config["delay"])
     schedule.daemon = True
     schedule.start()
     app.run(host='0.0.0.0', port=5000)

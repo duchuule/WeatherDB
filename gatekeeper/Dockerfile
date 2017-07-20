@@ -11,4 +11,4 @@ WORKDIR /gatekeeper
 RUN pip install -r requirements.txt
 
 #entry command
-CMD ["python", "-u", "gatekeeper.py"]
+CMD ["python", "-u", "__init__.py"]

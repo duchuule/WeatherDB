@@ -11,4 +11,4 @@ WORKDIR /extractor
 RUN pip install -r requirements.txt
 
 #entry command
-CMD ["python", "-u", "extractor.py"]
+CMD ["python", "-u", "__init__.py"]
