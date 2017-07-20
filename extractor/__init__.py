@@ -12,8 +12,7 @@ app = Flask(__name__)
 stop_event = Event()  # event handle to stop the scheduler
 config = {"delay": 60}  # default server config
 API_KEY = "a40f16f6c2b566534b10c2bb5553994b"
-database_host = "mongo"
-extractor = Extractor(cities, database_host, API_KEY)
+extractor = Extractor(cities, "mongo", API_KEY)
 
 
 # query current config
