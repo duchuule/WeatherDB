@@ -7,6 +7,9 @@ ADD . /extractor
 # Set the working directory 
 WORKDIR /extractor
 
+# Environment variables for database
+ENV DBHOST mongo
+
 # Install any needed packages specified in requirements.txt
 RUN pip install -r requirements.txt
 

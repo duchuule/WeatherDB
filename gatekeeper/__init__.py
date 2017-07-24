@@ -1,8 +1,9 @@
 from flask import Flask, make_response, request
 from model import JSONEncoder, Model
+import os
 
 app = Flask(__name__)
-model = Model("mongo")
+model = Model(os.getenv('DBHOST', "localhost"))
 
 
 # api to get weather data
