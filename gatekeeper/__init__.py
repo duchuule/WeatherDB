@@ -1,54 +1,56 @@
-from flask import Flask, make_response, request
-from model import JSONEncoder, Model
+from flask import Flask, make_response, request, jsonify
+from model import Weather, JSONEncoder
 import os
+import werkzeug.exceptions as exceptions
 
 app = Flask(__name__)
-model = Model(os.getenv('DBHOST', "localhost"))
+weather = Weather(os.getenv('DBHOST', "localhost"))
 
 
-# api to get weather data
-@app.route('/', methods=['GET'])
-def get_data():
-    db = model.get_db()
+@app.route('/db', methods=['GET'])
+def get_db_info():
+    """api to get general database info"""
+    db = weather.get_db()
+    return jsonify({"count": db.count()})
+
+
+@app.route('/db/<int:city_id>', methods=['GET'])
+def get_db_city_info(city_id):
+    """api to get database info for 1 particulr city"""
+    db = weather.get_db()
+    return jsonify({"count": db.find({"id": city_id}).count()})
+
+
+@app.route('/weather/<int:city_id>', methods=['GET'])
+def get_weather(city_id):
+    """api to get weather data for a particular city"""
     try:
-        if not request.json:
-            return JSONEncoder().encode({"error": "invalid json data"})
-    except Exception as e:
-        # note: this will happen if json data do not escape the quotes around "count", "time", etc (on windows)
-        return JSONEncoder().encode({"error": "invalid json data", "exception": str(e)})
-
-    # these commands do not require cityid
-    if 'count' in request.json:
-        if request.json['count'] == 'all':  # requesting sum total number of entries in database
-            return JSONEncoder().encode({"count": db.count()})
-        else:  # requesting only number of entries for 1 city
-            cityid = request.json['count']
-            return JSONEncoder().encode(db.find({"id": cityid}).count())
+        payload = request.get_json()
+    # BadRequest exception will be raised if json data is not formated properly
+    # and decoding of json data failed.
+    except exceptions.BadRequest as e:
+        return make_response(jsonify({"error": "bad request"}), 400)
 
     # the remaining commands require city id, so check for id field
-    if 'id' not in request.json:
-        return JSONEncoder().encode({"error": "invalid json data"})
+    if not payload:
+        return make_response(jsonify({"error": "invalid json data"}), 400)
 
-    cityid = request.json["id"]
+    db = weather.get_db()
+
 
     # when 'time' is requested, return one data point closest to that time
     if 'time' in request.json:
-        return JSONEncoder().encode(model.find_closest(request.json['time'], cityid))
+        return JSONEncoder().encode(weather.find_closest(request.json['time'], city_id))
     # when users request data for an a time interval
     elif 'begintime' in request.json and 'endtime' in request.json:
-        return JSONEncoder().encode(model.find_interval(request.json['begintime'], request.json['endtime'], cityid))
+        return JSONEncoder().encode(weather.find_interval(request.json['begintime'], request.json['endtime'], city_id))
     else:
-        return JSONEncoder().encode({"error": "no time specified"})
+        return make_response(jsonify({"error": "no time specified"}), 400)
 
 
 @app.errorhandler(404)
-def not_found():
-    return make_response(JSONEncoder().encode({'error': 'not found'}), 404)
-
-
-@app.errorhandler(400)
-def bad_request():
-    return make_response(JSONEncoder().encode({'error': 'bad request'}), 400)
+def not_found(error):
+    return make_response(jsonify({'error': 'not found'}), 404)
 
 
 if __name__ == "__main__":

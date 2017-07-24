@@ -20,7 +20,7 @@ class DatetimeHelper:
 
 
 class JSONEncoder(json.JSONEncoder):
-    """helper class for json encode because jsonify sucks"""
+    """helper class for json encode because jsonify does not work with mongo data"""
 
     def default(self, o):
         if isinstance(o, bson.ObjectId):
@@ -28,7 +28,7 @@ class JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-class Model:
+class Weather:
     """Class to query database and return requested entries"""
 
     def __init__(self, database_host):
@@ -48,7 +48,7 @@ class Model:
         closest_after = self._coll.find({"updated_on": {"$gte": time}, "id": cityid}).sort("updated_on",
                                                                                            pymongo.ASCENDING)
         if closest_before.count() == 0:  # no time before in database
-            return closest_after[0]
+            return closest_after[0] # TODO: handle error closest_after is also empty
         elif closest_after.count() == 0:  # no time after in database
             return closest_before[0]
         else:
