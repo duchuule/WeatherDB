@@ -31,9 +31,10 @@ class JSONEncoder(json.JSONEncoder):
 class Weather:
     """Class to query database and return requested entries"""
 
-    def __init__(self, database_host):
-        self._client = pymongo.MongoClient(host=database_host)
-        self._coll = self._client.weatherdb.weather
+    def __init__(self, database):
+        self._db = database
+        self._coll = self._db.weather
+
 
     def get_db(self):
         return self._coll

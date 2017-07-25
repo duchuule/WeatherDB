@@ -2,9 +2,12 @@ from flask import Flask, make_response, request, jsonify
 from model import Weather, JSONEncoder
 import os
 import werkzeug.exceptions as exceptions
+import pymongo
 
 app = Flask(__name__)
-weather = Weather(os.getenv('DBHOST', "localhost"))
+_host = os.getenv('DBHOST', "localhost")  # host name will be set by docker through environment variable if needed
+_db = pymongo.MongoClient(_host)['weatherdb']
+weather = Weather(_db)
 
 
 @app.route('/db', methods=['GET'])
@@ -36,7 +39,6 @@ def get_weather(city_id):
         return make_response(jsonify({"error": "invalid json data"}), 400)
 
     db = weather.get_db()
-
 
     # when 'time' is requested, return one data point closest to that time
     if 'time' in request.json:
