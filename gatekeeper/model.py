@@ -47,15 +47,17 @@ class Weather:
                                                                                             pymongo.DESCENDING)
         closest_after = self._coll.find({"updated_on": {"$gte": time}, "id": cityid}).sort("updated_on",
                                                                                            pymongo.ASCENDING)
-        if closest_before.count() == 0:  # no time before in database
-            return closest_after[0] # TODO: handle error closest_after is also empty
-        elif closest_after.count() == 0:  # no time after in database
-            return closest_before[0]
+        if closest_before.count() == 0 and closest_after.count() == 0:
+            return []
+        elif closest_before.count() == 0 and closest_after.count() > 0:  # no time before in database
+            return [closest_after[0]]
+        elif closest_after.count() == 0 and closest_before.count() > 0:  # no time after in database
+            return [closest_before[0]]
         else:
             if closest_after[0]["updated_on"] - time < time - closest_after[0]["updated_on"]:
-                return closest_after[0]
+                return [closest_after[0]]
             else:
-                return closest_before[0]
+                return [closest_before[0]]
 
     def find_interval(self, begintime_unknown_format, endtime_unknown_format, cityid):
         """ find all weather records for a city that happened in a time interval"""
