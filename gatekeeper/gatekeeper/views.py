@@ -7,12 +7,19 @@ import pymongo
 
 from gatekeeper import app
 
+weather = None
 
 
+def connect_db():
+    host = os.getenv('DBHOST', "localhost")  # host name will be set by docker through environment variable if needed
+    dbname = os.getenv('DBNAME', 'weatherdb')  # database name will be set by test cases if needed
+    db = pymongo.MongoClient(host)[dbname]
+    global weather
+    weather = Weather(db)
 
-_host = os.getenv('DBHOST', "localhost")  # host name will be set by docker through environment variable if needed
-_db = pymongo.MongoClient(_host)['weatherdb']
-weather = Weather(_db)
+
+# connect to database
+connect_db()
 
 
 @app.route('/db', methods=['GET'])
@@ -58,4 +65,3 @@ def get_weather(city_id):
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'not found'}), 404)
-
