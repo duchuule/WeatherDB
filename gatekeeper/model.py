@@ -33,7 +33,7 @@ class Weather:
 
     def __init__(self, database):
         self._db = database
-        self._coll = self._db.weather
+        self._coll = self._db["weather"]
 
 
     def get_db(self):
@@ -55,7 +55,7 @@ class Weather:
         elif closest_after.count() == 0 and closest_before.count() > 0:  # no time after in database
             return [closest_before[0]]
         else:
-            if closest_after[0]["updated_on"] - time < time - closest_after[0]["updated_on"]:
+            if closest_after[0]["updated_on"] - time < time - closest_before[0]["updated_on"]:
                 return [closest_after[0]]
             else:
                 return [closest_before[0]]
