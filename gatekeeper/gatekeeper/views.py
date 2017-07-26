@@ -1,10 +1,15 @@
-from flask import Flask, make_response, request, jsonify
-from model import Weather, JSONEncoder
-import os
+from flask import make_response, request, jsonify
+from .model import Weather, JSONEncoder
 import werkzeug.exceptions as exceptions
+
+import os
 import pymongo
 
-app = Flask(__name__)
+from gatekeeper import app
+
+
+
+
 _host = os.getenv('DBHOST', "localhost")  # host name will be set by docker through environment variable if needed
 _db = pymongo.MongoClient(_host)['weatherdb']
 weather = Weather(_db)
@@ -54,6 +59,3 @@ def get_weather(city_id):
 def not_found(error):
     return make_response(jsonify({'error': 'not found'}), 404)
 
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=80)
