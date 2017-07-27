@@ -1,6 +1,4 @@
-.idea
-
-__pycache__
-/test/.cache
-/gatekeeper/gatekeeeper.egg-info
-/tests/.cache
+**/.idea
+**/__pycache__
+**/.cache
+**/*.egg-info

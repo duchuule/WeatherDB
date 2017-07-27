@@ -1,9 +1,10 @@
-from flask import Flask, jsonify, abort, make_response, request
+from flask import jsonify, abort, make_response, request
 from threading import Event
-from extract import Extractor, Scheduler
+from .extract import Extractor, Scheduler
 import os
 
-app = Flask(__name__)
+from extractor.flask_app import app
+
 stop_event = Event()  # event handle to stop the scheduler
 
 app.config.from_pyfile("config.py")
@@ -12,6 +13,9 @@ app.config.from_pyfile("config.py")
 extractor = Extractor(app.config["CITIES"], os.getenv('DBHOST', "localhost"),
                       app.config["API_KEY"])
 
+schedule = Scheduler(stop_event, extractor.get_weather, app.config["DELAY"])
+schedule.daemon = True
+schedule.start()
 
 # query current config
 @app.route('/', methods=['GET'])
@@ -52,10 +56,3 @@ def not_found():
 @app.errorhandler(400)
 def bad_request():
     return make_response(jsonify({'error': 'bad request'}), 400)
-
-
-if __name__ == "__main__":
-    schedule = Scheduler(stop_event, extractor.get_weather, app.config["DELAY"])
-    schedule.daemon = True
-    schedule.start()
-    app.run(host='0.0.0.0', port=5000)
