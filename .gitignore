@@ -3,3 +3,4 @@
 __pycache__
 /test/.cache
 /gatekeeper/gatekeeeper.egg-info
+/tests/.cache
