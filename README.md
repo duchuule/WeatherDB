@@ -11,9 +11,9 @@ curl -i "http://localhost/db/4699066"
 
 curl -i -H "Content-Type: application/json" -X "GET" -d "{\\"time\\":1500273432}" "http://localhost/weather/4699066"
 
-curl -i -H "Content-Type: application/json" -X "GET" -d "{\\"time\\":\\"2017-07-17T04:07:25\\"}" "http://localhos/weather/4699066t"
+curl -i -H "Content-Type: application/json" -X "GET" -d "{\\"time\\":\\"2017-07-17T04:07:25\\"}" "http://localhost/weather/4699066"
 
 curl -i -H "Content-Type: application/json" -X "GET" -d "{\\"begintime\\":1500318000,\\"endtime\\":1500319800}" "http://localhost/weather/4699066"
 
-where: - "id" is cityid according to OpenWeatherMap (integer type)
+where: - the last number in url is cityid
        - "time", "begintime", "endtime" can be unix timestamp (integer type) or ISO 8601 string in UTC timezone
