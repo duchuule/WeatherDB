@@ -16,7 +16,10 @@ class DatetimeHelper:
         if isinstance(time, int):  # second check to see if it's epoch time
             return datetime.datetime.fromtimestamp(time, datetime.timezone.utc)
         else:
-            return parser.parse(time).replace(tzinfo=datetime.timezone.utc)
+            try:
+                return parser.parse(time).replace(tzinfo=datetime.timezone.utc)
+            except ValueError:
+                raise ValueError('time string needs to follow ISO 8601 format')
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -35,13 +38,33 @@ class Weather:
         self._db = database
         self._coll = self._db["weather"]
 
-
     def get_db(self):
         return self._coll
 
-    def find_closest(self, time_unknown_format, cityid):
+    def get_count(self, payload, city_id):
+        # when 'time' is requested, return one data point closest to that time
+        if 'time' in payload:
+            try:
+                time = math.floor(DatetimeHelper.to_datetime(payload['time']).timestamp())
+            except ValueError as e:
+                return {"status": "error", "code": 400, "message": str(e)}
+
+            return {"status": "success", "result": self.find_closest(time, city_id)}
+
+        # when users request data for an a time interval
+        elif 'begintime' in payload and 'endtime' in payload:
+            try:
+                begintime = math.floor(DatetimeHelper.to_datetime(payload['begintime']).timestamp())
+                endtime = math.floor(DatetimeHelper.to_datetime(payload['endtime']).timestamp())
+            except ValueError as e:
+                return {"status": "error", "code": 400, "message": str(e)}
+
+            return {"status": "success", "result": self.find_interval(begintime, endtime, city_id)}
+        else:
+            return {"status": "error", "message": "no time specified", "code": 400}
+
+    def find_closest(self, time, cityid):
         """ find weather record for a city at time closest to the specified time"""
-        time = math.floor(DatetimeHelper.to_datetime(time_unknown_format).timestamp())
 
         # try to find the a time closest before and a time closest after, then comparing them
         closest_before = self._coll.find({"updated_on": {"$lte": time}, "id": cityid}).sort("updated_on",
@@ -60,10 +83,9 @@ class Weather:
             else:
                 return [closest_before[0]]
 
-    def find_interval(self, begintime_unknown_format, endtime_unknown_format, cityid):
+    def find_interval(self, begintime, endtime, cityid):
         """ find all weather records for a city that happened in a time interval"""
-        begintime = math.floor(DatetimeHelper.to_datetime(begintime_unknown_format).timestamp())
-        endtime = math.floor(DatetimeHelper.to_datetime(endtime_unknown_format).timestamp())
+
         entries = self._coll.find({"updated_on": {"$gte": begintime, "$lte": endtime}, "id": cityid}) \
             .sort("updated_on", pymongo.ASCENDING)
         entries_list = []

@@ -50,16 +50,12 @@ def get_weather(city_id):
     if not payload:
         return make_response(jsonify({"error": "invalid json data"}), 400)
 
-    db = weather.get_db()
+    ret = weather.get_count(payload, city_id)
 
-    # when 'time' is requested, return one data point closest to that time
-    if 'time' in request.json:
-        return JSONEncoder().encode(weather.find_closest(request.json['time'], city_id))
-    # when users request data for an a time interval
-    elif 'begintime' in request.json and 'endtime' in request.json:
-        return JSONEncoder().encode(weather.find_interval(request.json['begintime'], request.json['endtime'], city_id))
+    if ret["status"] == "error":
+        return make_response(JSONEncoder().encode(ret), ret["code"])
     else:
-        return make_response(jsonify({"error": "no time specified"}), 400)
+        return make_response(JSONEncoder().encode(ret), 200)
 
 
 @app.errorhandler(404)

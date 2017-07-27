@@ -63,43 +63,64 @@ class TestGatekeeper(unittest.TestCase):
 
     def test_weather_wrong_content_type(self):
         rv = self.app.get('/weather/4699066',
-                          data=json.dumps({"time": 1500530000}),
+                          data='{"time": 1500530000}',
                           content_type='application/xyz')
         assert b'"error": "invalid json data"' in rv.data
         assert rv.status_code == 400
 
-    # these two methods have not passed yet
-
-    # def test_weather_wrong_data_type(self):
-    #     rv = self.app.get('/weather/4699066',
-    #                       data=json.dumps({"time": "abc"}),
-    #                       content_type='application/json')
-    #     assert b'"error": "invalid json data"' in rv.data
-    #     assert rv.status_code == 400
-
-    # def test_weather_bad_json_data(self):
-    #     with pytest.raises(exceptions.BadRequest):
-    #         rv = self.app.get('/weather/4699066',
-    #                       data=json.dumps({"time"}),
-    #                       content_type='application/json')
-
 
     def test_weather_good_json_data(self):
         rv = self.app.get('/weather/4699066',
-                          data=json.dumps({"time": 1500530000}),
+                          data='{"time": 1500530000}',
                           content_type='application/json')
         ret = json.loads(rv.data)
-        assert isinstance(ret, list)
-        assert len(ret) == 1
-        assert ret[0]["updated_on"] == 1500500000
+        assert ret["status"] == "success"
+        assert isinstance(ret["result"], list)
+        assert len(ret["result"]) == 1
+        assert ret["result"][0]["updated_on"] == 1500500000
+
+
+    def test_weather_time_value_in_quote(self):
+        rv = self.app.get('/weather/4699066',
+                          data='{"time": "1500530000"}',
+                          content_type='application/json')
+        ret = json.loads(rv.data)
+        assert ret["status"] == "error"
+        assert ret["message"] == "time string needs to follow ISO 8601 format"
+
+    def test_weather_bad_time_string(self):
+        rv = self.app.get('/weather/4699066',
+                          data='{"time":"abc"}',
+                          content_type='application/json')
+        ret = json.loads(rv.data)
+        assert ret["status"] == "error"
+        assert ret["message"] == "time string needs to follow ISO 8601 format"
+
+    def test_weather_no_time_value(self):
+        rv = self.app.get('/weather/4699066',
+                          data='{"time"}',
+                          content_type='application/json')
+        ret = json.loads(rv.data)
+        assert b'"error": "bad request"' in rv.data
+        assert rv.status_code == 400
+
+    def test_weather_wrong_keyword(self):
+        rv = self.app.get('/weather/4699066',
+                          data='{"date":"july1st"}',
+                          content_type='application/json')
+        ret = json.loads(rv.data)
+        assert ret["status"] == "error"
+        assert ret["message"] == "no time specified"
+
 
     def test_weather_good_json_data_wrong_city(self):
         rv = self.app.get('/weather/123',
-                          data=json.dumps({"time": 1500530000}),
+                          data='{"time": 1500530000}',
                           content_type='application/json')
         ret = json.loads(rv.data)
-        assert isinstance(ret, list)
-        assert len(ret) == 0
+        assert ret["status"] == "success"
+        assert isinstance(ret["result"], list)
+        assert len(ret["result"]) == 0
 
 
 if __name__ == '__main__':
