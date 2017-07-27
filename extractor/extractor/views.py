@@ -3,12 +3,14 @@ from threading import Event
 from .extract import Extractor, Scheduler
 import os
 import pymongo
+from extractor import config
+import werkzeug.exceptions as exceptions
 
 from extractor.flask_app import app
 
 stop_event = Event()  # event handle to stop the scheduler
 
-app.config.from_pyfile("config.py")
+app.config.from_object(config)
 
 # initialize the extractor object
 extractor = None
@@ -44,9 +46,14 @@ def get_db_info():
 # change configuration of the server
 @app.route('/config', methods=['PUT'])
 def set_config():
-    if not request.json:
-        abort(400)
-    if 'delay' in request.json:
+    try:
+        payload = request.get_json()
+    # BadRequest exception will be raised if json data is not formated properly
+    # and decoding of json data failed.
+    except exceptions.BadRequest as e:
+        return make_response(jsonify({"error": "bad request"}), 400)
+
+    if 'delay' in payload:
         if app.config["DELAY"] != request.json['delay']:
             app.config["DELAY"] = request.json['delay']
             global stop_event
@@ -59,10 +66,10 @@ def set_config():
 
 
 @app.errorhandler(404)
-def not_found():
+def not_found(error):
     return make_response(jsonify({'error': 'not found'}), 404)
 
 
 @app.errorhandler(400)
-def bad_request():
+def bad_request(error):
     return make_response(jsonify({'error': 'bad request'}), 400)

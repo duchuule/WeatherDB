@@ -1,15 +1,14 @@
-import gatekeeper
+import os
 import unittest
 import pymongo
-import os
 import json
-import pytest
-import werkzeug.exceptions as exceptions
+
+os.environ["DBNAME"] = "testdb"  # set database name before import gatekeeper
+import gatekeeper
+
 
 class TestGatekeeper(unittest.TestCase):
     def setUp(self):
-        super(TestGatekeeper, self).setUp()
-
         # set up mock database
         self._client = pymongo.MongoClient()
         self._client.drop_database('testdb')
@@ -23,9 +22,6 @@ class TestGatekeeper(unittest.TestCase):
                    {"id": 4699066, "updated_on": 1500900000}]
         coll.insert_many(entries)
 
-        # connect gatekeeper to mock database
-        os.environ["DBNAME"] = "testdb"
-        gatekeeper.views.connect_db()
 
         # set up test client
         gatekeeper.app.testing = True
