@@ -16,4 +16,5 @@ curl -i -H "Content-Type: application/json" -X "GET" -d "{\\"time\\":\\"2017-07-
 curl -i -H "Content-Type: application/json" -X "GET" -d "{\\"begintime\\":1500318000,\\"endtime\\":1500319800}" "http://localhost/weather/4699066"
 
 where: - the last number in url is cityid
+
        - "time", "begintime", "endtime" can be unix timestamp (integer type) or ISO 8601 string in UTC timezone
