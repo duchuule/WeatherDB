@@ -23,13 +23,13 @@ class Scheduler(Thread):
 class Extractor:
     """Class to perform data extracting from OpenWeatherMap"""
 
-    def __init__(self, cities, database_host, api_key):
+    def __init__(self, cities, database, api_key):
         self._cities = cities
-        self._client = pymongo.MongoClient(host=database_host)
+        self._db = database
         self._api_key = api_key
 
     def get_db(self):
-        coll = self._client.weatherdb.weather
+        coll = self._db["weather"]
         return coll
 
     def get_weather(self):

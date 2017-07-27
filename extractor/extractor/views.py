@@ -2,16 +2,26 @@ from flask import jsonify, abort, make_response, request
 from threading import Event
 from .extract import Extractor, Scheduler
 import os
+import pymongo
 
 from extractor.flask_app import app
 
 stop_event = Event()  # event handle to stop the scheduler
 
 app.config.from_pyfile("config.py")
+
 # initialize the extractor object
-# if using docker, the host name will be set to a value other than localhost
-extractor = Extractor(app.config["CITIES"], os.getenv('DBHOST', "localhost"),
-                      app.config["API_KEY"])
+extractor = None
+
+def connect_db():
+    host = os.getenv('DBHOST', "localhost")  # host name will be set by docker through environment variable if needed
+    dbname = os.getenv('DBNAME', 'weatherdb')  # database name will be set by test cases if needed
+    db = pymongo.MongoClient(host)[dbname]
+    global extractor
+    extractor = Extractor(app.config["CITIES"], db, app.config["API_KEY"])
+
+# connect to database
+connect_db()
 
 schedule = Scheduler(stop_event, extractor.get_weather, app.config["DELAY"])
 schedule.daemon = True
