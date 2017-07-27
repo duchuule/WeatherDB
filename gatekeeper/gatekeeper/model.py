@@ -49,7 +49,7 @@ class Weather:
             except ValueError as e:
                 return {"status": "error", "code": 400, "message": str(e)}
 
-            return {"status": "success", "result": self.find_closest(time, city_id)}
+            return {"status": "success", "ret": self.find_closest(time, city_id)}
 
         # when users request data for an a time interval
         elif 'begintime' in payload and 'endtime' in payload:
@@ -59,7 +59,7 @@ class Weather:
             except ValueError as e:
                 return {"status": "error", "code": 400, "message": str(e)}
 
-            return {"status": "success", "result": self.find_interval(begintime, endtime, city_id)}
+            return {"status": "success", "ret": self.find_interval(begintime, endtime, city_id)}
         else:
             return {"status": "error", "message": "no time specified", "code": 400}
 

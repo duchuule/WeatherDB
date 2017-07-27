@@ -75,9 +75,9 @@ class TestGatekeeper(unittest.TestCase):
                           content_type='application/json')
         ret = json.loads(rv.data)
         assert ret["status"] == "success"
-        assert isinstance(ret["result"], list)
-        assert len(ret["result"]) == 1
-        assert ret["result"][0]["updated_on"] == 1500500000
+        assert isinstance(ret["ret"], list)
+        assert len(ret["ret"]) == 1
+        assert ret["ret"][0]["updated_on"] == 1500500000
 
 
     def test_weather_time_value_in_quote(self):
@@ -119,8 +119,8 @@ class TestGatekeeper(unittest.TestCase):
                           content_type='application/json')
         ret = json.loads(rv.data)
         assert ret["status"] == "success"
-        assert isinstance(ret["result"], list)
-        assert len(ret["result"]) == 0
+        assert isinstance(ret["ret"], list)
+        assert len(ret["ret"]) == 0
 
 
 if __name__ == '__main__':

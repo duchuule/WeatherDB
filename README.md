@@ -3,7 +3,7 @@ A service that periodically collects weather data from OpenWeatherMap and provid
 
 1. Extractor service is run on port 5000. When run, it collects weather data from 5 largest cities every minute. The data collection interval can be changed with a PUT request.
 
-2. Gatekeeper service is run on port 80. At the moment, it only supports querying time at a specific instance and will return weather data at the best matched time in record. Use curl to test:
+2. Gatekeeper service is run on port 80. Here are some of the supported APIs using curl:
 
 curl -i -H "Content-Type: application/json" -X "GET" -d "{\"id\":4699066,\"time\":1500273432}" "http://localhost"
 

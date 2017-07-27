@@ -5,7 +5,7 @@ import werkzeug.exceptions as exceptions
 import os
 import pymongo
 
-from gatekeeper import app
+from gatekeeper.flask_app import app
 
 weather = None
 
